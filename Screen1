@@ -1,0 +1,191 @@
+import React, {useState, useEffect} from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ScrollView,
+  ImageBackground,
+  TouchableWithoutFeedback,
+  Button,
+  Platform,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import axios from 'axios';
+import Video from 'react-native-video';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+
+import LogoImage from '../iamges/logo1.png';
+import Loading from '../components/Loading';
+import Screen from '../components/Screen';
+import CustomVideo from '../components/CustomVideo';
+
+function HomeScreen({navigation}) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [data, setData] = useState([]);
+  const [imageURL, setImageURL] = useState('');
+  const [fullScreen, setFullScreen] = useState(false);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const url = `example`;
+      const response = await axios.get(url);
+      setIsLoading(false);
+      setError(false);
+      setData(response.data);
+      setImageURL(
+        'example' + response.data['ThumbnailVideo']['url'],
+      );
+    } catch (error) {
+      setIsLoading(false);
+      setError(true);
+    }
+  };
+
+  if (fullScreen) {
+    navigation.setOptions({tabBarVisible: false});
+    return (
+      <CustomVideo
+        setFullScreen={setFullScreen}
+        videoURI={'url' + data['Video']['url']}
+      />
+    );
+  } else {
+    navigation.setOptions({tabBarVisible: true});
+  }
+
+  if (isLoading || !imageURL) {
+    return <Loading />;
+  } else {
+    if (error) {
+      return (
+        <Screen>
+          <View style={styles.errorContainer}>
+            <Text style={styles.error}>
+              Error al cargar el video.
+            </Text>
+            <Button color="#212844" title="Re-intentar" onPress={loadData} />
+          </View>
+        </Screen>
+      );
+    } else {
+      return (
+        <ScrollView>
+          <View style={styles.section}>
+            <Image source={LogoImage} style={styles.logoImage} />
+            <Text style={styles.slogan}>{data['Slogan']}</Text>
+            <View style={styles.video}>
+              {Platform.OS === 'android' ? (
+                <ImageBackground
+                  source={{
+                    uri: imageURL,
+                  }}
+                  style={styles.videoBackground}
+                  imageStyle={{opacity: 0.7}}>
+                  <TouchableWithoutFeedback
+                    onPress={() => {
+                      setFullScreen(true);
+                    }}>
+                    <Icon name="play" size={110} color="#ffffff" />
+                  </TouchableWithoutFeedback>
+                </ImageBackground>
+              ) : (
+                <Video
+                  source={{
+                    uri: 'url' + data['Video']['url'],
+                  }}
+                  controls
+                  style={styles.iosVideo}
+                  resizeMode="contain"
+                  poster={imageURL}
+                  posterResizeMode="cover"
+                  paused
+                />
+              )}
+            </View>
+            <Text style={styles.desc}>{data['Descripcion']}</Text>
+          </View>
+        </ScrollView>
+      );
+    }
+  }
+}
+
+const styles = StyleSheet.create({
+  section: {
+    flex: 1,
+    minHeight: hp('100%'),
+    backgroundColor: '#212844',
+  },
+  logoImage: {
+    marginTop: 50,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    width: 87,
+    height: 79,
+  },
+  slogan: {
+    fontSize: hp(3.2),
+    fontWeight: '600',
+    color: '#DFE2ED',
+    letterSpacing: 1.7,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 40,
+    textTransform: 'uppercase',
+  },
+  video: {
+    marginTop: 40,
+    width: wp('80%'),
+    height: hp('40%'),
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    backgroundColor: '#212844',
+    borderRadius: 15,
+    overflow: 'hidden',
+  },
+  videoBackground: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  desc: {
+    marginVertical: 40,
+    width: wp('80%'),
+    fontSize: hp(2.5),
+    lineHeight: 30,
+    color: '#C3CCF0',
+    textAlign: 'justify',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 35,
+  },
+  error: {
+    fontSize: 25,
+    fontWeight: '600',
+    color: '#212844',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  iosVideo: {
+    height: '100%',
+    width: '100%',
+    backgroundColor: '#212844',
+  },
+});
+
+export default HomeScreen;

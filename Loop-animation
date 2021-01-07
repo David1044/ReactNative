@@ -1,0 +1,8 @@
+import React from 'react';
+import LottieView from 'lottie-react-native';
+
+import CustomAnimation from '../animations/animation3.json';
+import CustomAnimation from '../animations/animation2.json';
+
+function Loading() {
+  return <LottieView source={CustomAnimation} autoPlay loop />; 
